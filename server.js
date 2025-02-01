@@ -7,9 +7,8 @@ dotenv.config();
 
 const app = express();
 
-// Updated CORS configuration to be more permissive during development
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173', 'https://portfolio-blond-two-46.vercel.app/'], // Add your frontend URL
+  origin: ['http://localhost:3000', 'http://localhost:5173', 'https://portfolio-blond-two-46.vercel.app/'],
   methods: ['POST', 'OPTIONS'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Accept']
@@ -17,7 +16,6 @@ app.use(cors({
 
 app.use(express.json());
 
-// Create nodemailer transporter
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 465,
@@ -28,12 +26,10 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Test route
 app.get('/', (req, res) => {
   res.send('Email server is running');
 });
 
-// Email sending route
 app.post('/send-email', async (req, res) => {
   const { name, subject, email, message } = req.body;
   
@@ -41,9 +37,10 @@ app.post('/send-email', async (req, res) => {
     return res.status(400).json({ error: 'All fields are required' });
   }
 
-  const mailOptions = {
+  // Original email to you
+  const mainMailOptions = {
     from: `"Contact Form" <${process.env.EMAIL_USER || 'rainarender009@gmail.com'}>`,
-    to: process.env.EMAIL_USER || 'rainarender009@gmail.com',
+    to: 'rainarender1997@gmail.com',
     replyTo: email,
     subject: `New Contact Form Message: ${subject}`,
     html: `
@@ -58,14 +55,42 @@ app.post('/send-email', async (req, res) => {
     `
   };
 
+  // Auto-reply email to sender
+  const autoReplyOptions = {
+    from: `"Narender Rai" <${process.env.EMAIL_USER || 'rainarender009@gmail.com'}>`,
+    to: email,
+    subject: 'Thank you for contacting me',
+    html: `
+      <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+        <h2>Thank you for reaching out!</h2>
+        <p>Dear ${name},</p>
+        <p>I've received your message regarding "${subject}" and I appreciate you taking the time to contact me.</p>
+        <p>This is an automatic confirmation that your message has been received. I will review your email and get back to you as soon as possible.</p>
+        <p>For your reference, here's a copy of your message:</p>
+        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 15px 0;">
+          <p style="white-space: pre-wrap;">${message}</p>
+        </div>
+        <p>Best regards,</p>
+        <p><strong>Narender Rai</strong></p>
+        <hr style="border: 1px solid #eee; margin: 20px 0;">
+        <p style="font-size: 12px; color: #666;">This is an automated response. Please do not reply to this email.</p>
+      </div>
+    `
+  };
+
   try {
-    await transporter.sendMail(mailOptions);
-    console.log('Email sent successfully');
-    res.status(200).json({ message: 'Email sent successfully' });
+    // Send both emails
+    await Promise.all([
+      transporter.sendMail(mainMailOptions),
+      transporter.sendMail(autoReplyOptions)
+    ]);
+    
+    console.log('Emails sent successfully');
+    res.status(200).json({ message: 'Emails sent successfully' });
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error('Error sending emails:', error);
     res.status(500).json({ 
-      error: 'Failed to send email', 
+      error: 'Failed to send emails', 
       details: error.message 
     });
   }
