@@ -9,7 +9,7 @@ const app = express();
 
 // Updated CORS configuration to be more permissive during development
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173'], // Add your frontend URL
+  origin: ['http://localhost:3000', 'http://localhost:5173', 'https://portfolio-blond-two-46.vercel.app/'], // Add your frontend URL
   methods: ['POST', 'OPTIONS'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Accept']
